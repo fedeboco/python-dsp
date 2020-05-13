@@ -23,9 +23,14 @@ windowsLegends = np.array(["Rectangular, Bartlett, Blackman, Hamming, Hann"])
 graphs.multiPlot(windowsArray, 3, 2)
 
 ## filter
-pi =3.14159
+pi = 3.14159
 window = filters.createWindow(0.4 * pi, 0.31 * pi, 0.012, 0.03)
 graphs.plot(window.values, "WinFilter [n]")
+wVec = [9, 10, 3.6, 3.5]
+deltaVec = [0.03, 0.02, 0.01, 0.5]
+filter = filters.Filter(wVec, deltaVec)
+filter.printValues()
+filters.findLimitingW(wVec)
 
 ## closing all plots when finished
 graphs.closeAll()

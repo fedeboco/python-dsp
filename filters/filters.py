@@ -1,7 +1,45 @@
 import windows as win
 import numpy as np
 
-def chooseWindow(wp, ws, delta1, delta2 = 0):
+class Filter:
+    values = {}
+    def loadValues(self, wVector, deltaVector):
+        auxList = []
+        auxValues = {}
+
+        if (len(wVector) != len(deltaVector)):
+            print("w vector length differs from delta vector length")
+            return
+        
+        # creates unsorted dictionary (w, delta)
+        for i in range(0, len(wVector)):
+            auxValues[wVector[i]] = deltaVector[i]
+
+        # creates sorted index for dictionary keys
+        auxList = sorted(auxValues)     
+
+        # stores dictionary sorted (w, delta)
+        for i in range(0,len(auxList)):
+           self.values[auxList[i]] = auxValues[auxList[i]]
+
+    def __init__(self, wVector, deltaVector):
+        self.loadValues(wVector, deltaVector)
+
+    def printValues(self):
+        print(self.values)
+
+# wVector sorted in increasing order
+def findLimitingW(wVector):
+    W = np.inf
+    for i in range(0, len(wVector), 2):
+        if (wVector[i + 1] - wVector[i] < W):
+            W = wVector[i + 1] - wVector[i]
+    print(W)
+
+def findLimitingValues(wVector, deltaVector):
+    print("do something")
+
+def chooseWindow(w1, w2, delta1, delta2 = 0):
     windows = {
         "dRect": 0.09,
         "dBartlett": 0.05,
@@ -16,15 +54,15 @@ def chooseWindow(wp, ws, delta1, delta2 = 0):
     for windowType, deltaWindow in windows.items():
         if (isGoodWindow(deltaWindow, desiredWindow.delta)):
             desiredWindow.name = windowType
-            desiredWindow.M = int(setM(windowType, wp, ws))
-            desiredWindow.wc = (wp + ws) / 2
+            desiredWindow.M = int(setM(windowType, w1, w2))
+            desiredWindow.wc = (w1 + w2) / 2
             return desiredWindow
 
     print("Couldn't choose a proper window in chooseWindow()")
     return []
 
-def createWindow(wp, ws, delta1, delta2 = 0, size = 0):
-    window = chooseWindow(wp, ws, delta1, delta2)
+def createWindow(w1, w2, delta1, delta2 = 0, size = 0):
+    window = chooseWindow(w1, w2, delta1, delta2)
     if (window == []):
         return []
 
@@ -52,8 +90,8 @@ def minDelta(delta1, delta2):
 def isGoodWindow(deltaWindow, deltaDesired):
     return deltaWindow < deltaDesired
 
-def setM(window, wp, ws):
-    w = abs(wp - ws)
+def setM(window, w1, w2):
+    w = abs(w1 - w2)
     pi = 3.14159265358979323846
     if (window == "dRect"):
         M = np.ceil(4 * pi / w - 1)
