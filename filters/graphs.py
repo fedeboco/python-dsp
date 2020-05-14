@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 
-def plot(vector, yAxisLabel = "y [n]"):
+def plot(vector, yAxisLabel = "y"):
     plt.figure()
     plt.stem(vector, basefmt = " ", use_line_collection = True)
     plt.show(block=False)
     plt.grid()
     plt.xlabel('n')
-    plt.ylabel(yAxisLabel)
+    plt.ylabel(yAxisLabel + " [n]")
+    plt.title(yAxisLabel)
 
 def closeAll():
     input("q to quit.\n")

@@ -9,28 +9,17 @@ bart1 = windows.bartlett(12, 24)
 hann1 = windows.hann(120)
 hamm1 = windows.hamming(80)
 blck1 = windows.blackman(80)
-
-## different plots
-graphs.plot(rect1, "Rectangle [n]")
-graphs.plot(bart1, "Bartlett [n]")
-graphs.plot(hann1, "Hann [n]")
-graphs.plot(hamm1, "Hamming [n]")
-graphs.plot(blck1, "Blackman [n]")
-
-## all plots
 windowsArray = np.array([rect1, bart1, blck1, hamm1, hann1])
 windowsLegends = np.array(["Rectangular, Bartlett, Blackman, Hamming, Hann"])
 graphs.multiPlot(windowsArray, 3, 2)
 
 ## filter
 pi = 3.14159
-window = filters.createWindow(0.4 * pi, 0.31 * pi, 0.012, 0.03)
-graphs.plot(window.values, "WinFilter [n]")
-wVec = [9, 10, 3.6, 3.5]
-deltaVec = [0.03, 0.02, 0.01, 0.5]
-filter = filters.Filter(wVec, deltaVec)
-filter.printValues()
-filters.findLimitingW(wVec)
+wVec = [0.31, 0.4, 0.6, 0.8] # w/pi
+deltaVec = [0.012, 0.03, 0.03, 0.01] # len(W) = len(delta)
+ampVec = [0, 2, 4/5] # len(A) = len(W) / 2 + 1. Must be ordered
+filter = filters.Filter(wVec, deltaVec, ampVec)
+graphs.plot(filter.getWindow(), "WinFilter")
 
 ## closing all plots when finished
 graphs.closeAll()

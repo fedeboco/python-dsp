@@ -5,7 +5,6 @@ class Window:
     values = []
     M = 0
     delta = 0
-    wc = 0
     Ap = 0
     As = 0
 
@@ -13,9 +12,11 @@ def rectangular(N, size = 0):
     w1 = np.ones(N + 1)
     if (size > N):
         w2 = np.zeros(size - N)
+        return np.array(np.concatenate((w1, w2)))
     elif (size != 0):
         print("Invalid size.")
-    return np.array(np.concatenate((w1, w2)))
+    else:
+        return w1
 
 def bartlett(N, size = 0):
     w1 = []
