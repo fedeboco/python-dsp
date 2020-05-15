@@ -13,6 +13,7 @@ class Filter:
         auxList = []
         auxValues = {}
         self.A = ampVector
+        pi = fmath.pi()
 
         if (len(wVector) != len(deltaVector) or
             len(ampVector) != len(deltaVector) / 2 + 1):
@@ -21,7 +22,7 @@ class Filter:
         
         # creates unsorted dictionary (w, delta)
         for i in range(0, len(wVector)):
-            auxValues[wVector[i]] = deltaVector[i]
+            auxValues[wVector[i] * pi] = deltaVector[i]
 
         # creates sorted index for dictionary keys
         auxList = sorted(auxValues)     
@@ -59,28 +60,61 @@ class Filter:
     def filterHP(self, wc):
         return idealHP(wc, self.window.M)
 
-def idealLP(wc, M):
-    tau = M / 2
+    def filterBP(self, wl, wh):
+        return idealBP(wl, wh, self.window.M)
+
+    def filterMB(self):
+        return idealMB(list(self.values.keys()), self.A, self.window.M)
+
+def idealLP(wc, M, A = 1):
+    tau = M / 2.0
     pi = fmath.pi()
     h = []
     for n in range(0, M):
         aux = n - tau
         if (aux != 0):
-            h.append( fmath.sin(wc * aux) / (pi * aux) )
+            h.append( A * fmath.sin(wc * aux) / (pi * aux) )
         else:
-            h.append( 1 )
+            h.append( A * 1 )
     return h
 
-def idealAP(M):
+def idealAP(M, A = 1):
+    tau = M / 2.0
     pi = fmath.pi()
-    x = [ float(pi * (n - M / 2)) for n in range(0, M) ]
-    return fmath.sinc( x )
+    h = []
+    for n in range(0, M):
+        aux = n - tau
+        if (aux != 0):
+            h.append( A * fmath.sin(pi * aux) / (pi * aux) )
+        else:
+            h.append( A * 1 )
+    return h
 
-def idealHP(wc, M):
+def idealHP(wc, M, A = 1):
     ap = idealAP(M)
     lp = idealLP(wc, M)
-    h = [ ap[n] - lp[n] for n in range(0, M) ]
+    h = [ A * (ap[n] - lp[n]) for n in range(0, M) ]
     return h
+
+def idealBP(wl, wh, M, A = 1):
+    if (wl >= wh):
+        print("wlow > whigh")
+    lp1 = idealLP(wh, M)
+    lp2 = idealLP(wl, M)
+    return [ A * (lp1[n] - lp2[n]) for n in range(0, M) ]
+
+def idealMB(wVector, amplitude, M):
+    wVector = cutoffFrequencies(wVector)
+    h = idealLP(wVector[0], M, amplitude[0])
+    aux = idealHP(wVector[-1], M, amplitude[-1])
+    h = [ h[n] + aux[n] for n in range(0, M) ] 
+    for i in range(0, len(wVector) - 1):
+        iBP = idealBP(wVector[i], wVector[i + 1], M, amplitude[i + 1])
+        h = [ h[n] + iBP[n] for n in range(0, M) ]
+    return h
+
+def cutoffFrequencies(wVector):
+    return [ (wVector[i] + wVector[i + 1]) / 2.0 for i in range(0, len(wVector) - 1, 2)]
 
 # wVector sorted in increasing order
 def findLimitingW(wVector):

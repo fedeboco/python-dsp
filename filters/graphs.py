@@ -2,12 +2,23 @@ import matplotlib.pyplot as plt
 
 def plot(vector, yAxisLabel = "y"):
     plt.figure()
-    #plt.stem(vector, basefmt = " ", use_line_collection = True)
     plt.plot(vector)
     plt.show(block=False)
     plt.grid()
     plt.xlabel('n')
     plt.ylabel(yAxisLabel + " [n]")
+    plt.title(yAxisLabel)
+
+def plotFilterResponse(vector, yAxisLabel = "fft(x[n])"):
+    pi = 3.14159265358979323846
+    L = len(vector)
+    x = [n * 2 * pi / L for n in range(0,L)]
+    plt.figure()
+    plt.plot(x, vector)
+    plt.show(block=False)
+    plt.grid()
+    plt.xlabel('w')
+    plt.ylabel(yAxisLabel + " (w)")
     plt.title(yAxisLabel)
 
 def closeAll():
