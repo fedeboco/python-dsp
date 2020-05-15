@@ -15,11 +15,17 @@ graphs.multiPlot(windowsArray, 3, 2)
 
 ## filter
 pi = 3.14159
-wVec = [0.31, 0.4, 0.6, 0.8] # w/pi
-deltaVec = [0.012, 0.03, 0.03, 0.01] # len(W) = len(delta)
+wVec = [0.3, 0.4, 0.6, 0.8] # w/pi
+deltaVec = [0.1, 0.3, 0.3, 0.1] # len(W) = len(delta)
 ampVec = [0, 2, 4/5] # len(A) = len(W) / 2 + 1. Must be ordered
 filter = filters.Filter(wVec, deltaVec, ampVec)
 graphs.plot(filter.getWindow(), "WinFilter")
+
+## LP
+HP = filter.filterHP(pi / 2)
+AP = filter.filterAP()
+f = np.fft.fft(HP)
+graphs.plot(abs(f))
 
 ## closing all plots when finished
 graphs.closeAll()

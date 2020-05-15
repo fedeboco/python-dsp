@@ -3,7 +3,7 @@ def pi():
 
 def pow(x, n):
     p = 1
-    for i in range(0, n):
+    for _ in range(0, n):
         p = p * x   
     return p
 
@@ -40,9 +40,19 @@ def cos(x):
     sgn = sign(x)
     x = abs(x)
     p = pi()
-    while(x > p):
-        x = x - p
+    while(x > 2 * p):
+        x = x - 2 * p
     x = sgn * x
     for n in range(0, 30):
         s = s + pow(-1, n) * pow(x, 2 * n) / fact(2 * n)
+    return s
+
+def sinc(x):
+    s = []
+    for i in range(0, len(x)):
+        val = x[i]
+        if (val != 0):
+            s.append(sin(val) / val)
+        else:
+            s.append(1)
     return s

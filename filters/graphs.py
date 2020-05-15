@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 
 def plot(vector, yAxisLabel = "y"):
     plt.figure()
-    plt.stem(vector, basefmt = " ", use_line_collection = True)
+    #plt.stem(vector, basefmt = " ", use_line_collection = True)
+    plt.plot(vector)
     plt.show(block=False)
     plt.grid()
     plt.xlabel('n')

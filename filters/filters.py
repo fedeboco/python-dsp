@@ -1,5 +1,6 @@
 import windows as win
 import numpy as np
+import filmath as fmath
 
 class Filter:
     values = {}
@@ -48,6 +49,38 @@ class Filter:
 
     def getWindow(self):
         return self.window.values
+
+    def filterLP(self, wc):
+        return idealLP(wc, self.window.M)
+    
+    def filterAP(self):
+        return idealAP(self.window.M)
+
+    def filterHP(self, wc):
+        return idealHP(wc, self.window.M)
+
+def idealLP(wc, M):
+    tau = M / 2
+    pi = fmath.pi()
+    h = []
+    for n in range(0, M):
+        aux = n - tau
+        if (aux != 0):
+            h.append( fmath.sin(wc * aux) / (pi * aux) )
+        else:
+            h.append( 1 )
+    return h
+
+def idealAP(M):
+    pi = fmath.pi()
+    x = [ float(pi * (n - M / 2)) for n in range(0, M) ]
+    return fmath.sinc( x )
+
+def idealHP(wc, M):
+    ap = idealAP(M)
+    lp = idealLP(wc, M)
+    h = [ ap[n] - lp[n] for n in range(0, M) ]
+    return h
 
 # wVector sorted in increasing order
 def findLimitingW(wVector):
@@ -158,3 +191,5 @@ def setParity(M, odd):
         return M + 1
     elif (M % 2 == 1 and not(odd)):
         return M + 1
+    else:
+        return M
