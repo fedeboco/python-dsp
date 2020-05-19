@@ -1,6 +1,7 @@
-import windows as win
+from filters import windows as win
+from filters import filmath as fmath
 import numpy as np
-import filmath as fmath
+
 
 class Filter:
     values = {}

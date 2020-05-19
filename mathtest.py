@@ -1,6 +1,6 @@
-import filmath as fi
-import numpy as np
-import graphs
+from filters import filmath as fi
+from filters import numpy as np
+from filters import graphs
 
 accuracy = "{0:15.10f}"
 text = "{0:^15}"
