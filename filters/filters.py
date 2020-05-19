@@ -64,7 +64,10 @@ class Filter:
         return idealBP(wl, wh, self.window.M)
 
     def filterMB(self):
-        return idealMB(list(self.values.keys()), self.A, self.window.M)
+        hd = idealMB(list(self.values.keys()), self.A, self.window.M)
+        h = [hd[n] * self.window.values[n] for n in range(0, self.window.M)]
+        print(len(self.window.values), len(h), self.window.M)
+        return h
 
 def idealLP(wc, M, A = 1):
     tau = M / 2.0
@@ -134,9 +137,11 @@ def findLimitingDelta(deltaVector, A):
     for i in range(0, len(deltaVector)):
         if (i % 2 == 0):
             j = j + 1
-        auxDelta = deltaVector[i] / abs(A[j + 1] - A[j])
-        if (auxDelta < minDelta):
-            minDelta = auxDelta
+        dA = A[j + 1] - A[j]
+        if (dA != 0):
+            auxDelta = deltaVector[i] / abs(dA)
+            if (auxDelta < minDelta):
+                minDelta = auxDelta
 
     return minDelta
 
@@ -227,3 +232,8 @@ def setParity(M, odd):
         return M + 1
     else:
         return M
+
+def filterSignal(s, fil):
+    s = np.array(s)
+    y = np.dot(s, fil)
+    return y

@@ -9,7 +9,7 @@ class Window:
     As = 0
 
 def rectangular(N, size = 0):
-    w1 = np.ones(N + 1)
+    w1 = np.ones(N)
     if (size > N):
         w2 = np.zeros(size - N)
         return np.array(np.concatenate((w1, w2)))
@@ -50,6 +50,6 @@ def hamming(N, size = 0):
 def blackman(N, size = 0):
     pi = 3.14159265358979323846
     w = []
-    for i in range(0, N+1):
+    for i in range(0, N):
         w.append(0.42 - 0.5 * np.cos(2 * pi * i / N) + 0.08 * np.cos(4 * pi * i / N))
     return w
