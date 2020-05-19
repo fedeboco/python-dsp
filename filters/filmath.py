@@ -1,5 +1,4 @@
-def pi():
-    return 3.14159265358979323846
+pi = 3.14159265358979323846
 
 def pow(x, n):
     p = 1
@@ -23,7 +22,7 @@ def abs(x):
 def sin(x):
     s = 0
     sgn = sign(x)
-    p = 2 * pi()
+    p = 2 * pi
     while( sgn * x > p ):
         x = x - sgn * p
     for n in range(0, 30):
@@ -34,7 +33,7 @@ def cos(x):
     s = 0
     sgn = sign(x)
     x = abs(x)
-    p = pi()
+    p = pi
     while(x > 2 * p):
         x = x - 2 * p
     x = sgn * x

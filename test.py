@@ -16,7 +16,7 @@ f = np.fft.fft(MB)
 graphs.plotFilterResponse(abs(f), "filter")
 
 ## pyaudio
-speech = mic.MicFilter(MB)
+speech = mic.MicFilter(filter = MB)
 speech.startStream()
 
 # closing all plots when finished

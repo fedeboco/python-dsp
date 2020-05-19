@@ -6,43 +6,62 @@ from filters import filters
 # pip install PyAudio‑0.2.11‑cp38‑cp38‑win_amd64.whl
 
 class MicFilter:
-    WIDTH = 2
-    CHANNELS = 1
-    RATE = 22050
+    width = 2
+    channels = 1
+    rate = 22050
     p = pyaudio.PyAudio()
-    MB = [1]
-    queue = list(np.zeros(len(MB)))
+    fil = [1]
+    queue = list(np.zeros(len(fil)))
+    stream = 0
 
-    def __init__(self, fil = [1]):
-        self.MB = np.array(fil[::-1])
-        self.queue = list(np.zeros(len(self.MB)))
+    def __init__(self, *args, **kwargs):
+        if  'filter' in kwargs:
+            fil = kwargs['filter']
+            self.fil = np.array(fil[::-1])
+        if 'channels' in kwargs:
+            self.channels = kwargs['channels']
+        if 'width' in kwargs:
+            self.width = kwargs['width']
+        self.queue = list(np.zeros(len(self.fil)))
+
+    def newFilter(self, filter):
+        self.fil = np.array(filter[::-1])
 
     def startStream(self):
-        stream = self.p.open(format=self.p.get_format_from_width(self.WIDTH),
-                        channels=self.CHANNELS,
-                        rate=self.RATE,
+        self.stream = self.p.open(format=self.p.get_format_from_width(self.width),
+                        channels=self.channels,
+                        rate=self.rate,
                         input=True,
                         output=True,
                         stream_callback=self.callback)
 
-        stream.start_stream()
-        while stream.is_active():
-            time.sleep(0.1)
-        stream.stop_stream()
-        stream.close()
-        self.p.terminate()
+        self.stream.start_stream()
+        self.blockStreaming()
+        self.stopStream()
 
-    def callback(self, in_data, frame_count, time_info, status):
-        amplitude = np.frombuffer(in_data, dtype=np.int16)
-        out_data = ()
-        ran = range(0, frame_count, 1)
+
+    def callback(self, inData, frameCount, timeInfo, status):
+        signalChunck = np.frombuffer(inData, dtype=np.int16)
+        filteredChunck = ()
+        ran = range(0, frameCount, 1)
         for n in ran:
-            self.queue.append(amplitude[n])
-            self.queue.pop(0)
-            filteredSample = filters.filterSignal(self.queue[- len(self.MB):], self.MB)
-            out_data = np.append(out_data, int(filteredSample))
-        return (out_data.astype(np.int16).tostring(), pyaudio.paContinue)
+            self.updateQueue(signalChunck[n])
+            filteredSample = filters.filterSignal(self.queue[-len(self.fil):], self.fil)
+            filteredChunck = np.append(filteredChunck, filteredSample)
+        return (filteredChunck.astype(np.int16).tostring(), pyaudio.paContinue)
 
+    def blockStreaming(self):
+        while self.stream.is_active():
+            time.sleep(0.1)
+
+    def updateQueue(self, amplitudeValue):
+        self.queue.append(amplitudeValue)
+        self.queue.pop(0)
+
+    def stopStream(self):
+        self.stream.stop_stream()
+        self.stream.close()
+        self.p.terminate()
 
 
 

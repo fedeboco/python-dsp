@@ -1,6 +1,6 @@
 from filters import filmath as fi
-from filters import numpy as np
 from filters import graphs
+import numpy as np
 
 accuracy = "{0:15.10f}"
 text = "{0:^15}"
@@ -11,7 +11,7 @@ print(  "   ",
         text.format("numpy"), 
         text.format("error")    )
 
-for x in np.linspace(0, 10 * fi.pi()):
+for x in np.linspace(0, 10 * fi.pi):
     a = fi.cos(x)
     b = np.cos(x)
     error = abs(a - b) / b * 100
@@ -20,7 +20,7 @@ for x in np.linspace(0, 10 * fi.pi()):
             accuracy.format(b),
             accuracy.format(error), "%")
 
-lim = 8 * fi.pi()
+lim = 8 * fi.pi
 x = np.linspace(-lim, lim, 2500)
 r = fi.sinc(x)
 graphs.plot(r)

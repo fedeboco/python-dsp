@@ -14,7 +14,7 @@ class Filter:
         auxList = []
         auxValues = {}
         self.A = ampVector
-        pi = fmath.pi()
+        pi = fmath.pi
 
         if (len(wVector) != len(deltaVector) or
             len(ampVector) != len(deltaVector) / 2 + 1):
@@ -72,7 +72,7 @@ class Filter:
 
 def idealLP(wc, M, A = 1):
     tau = M / 2.0
-    pi = fmath.pi()
+    pi = fmath.pi
     h = []
     for n in range(0, M):
         aux = n - tau
@@ -84,7 +84,7 @@ def idealLP(wc, M, A = 1):
 
 def idealAP(M, A = 1):
     tau = M / 2.0
-    pi = fmath.pi()
+    pi = fmath.pi
     h = []
     for n in range(0, M):
         aux = n - tau
