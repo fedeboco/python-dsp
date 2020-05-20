@@ -1,6 +1,8 @@
 import pyaudio
 import time
 import numpy as np
+import filters as fil
+from filters import settings
 from filters import filters
 from collections import deque
 
@@ -12,6 +14,7 @@ class MicFilter:
     fil = [1]
     queue = deque(list(np.zeros(len(fil))))
     stream = 0
+    filterSettings = 0
     stopFiltering = False
 
     def __init__(self, *args, **kwargs):
@@ -24,8 +27,24 @@ class MicFilter:
             self.width = kwargs['width']
         if 'stopFlag' in kwargs:
             self.stopFiltering = kwargs['stopFlag']
+        if 'filterSettings' in kwargs:
+            self.filterSettings = kwargs['filterSettings']
+            wVec = self.filterSettings.frequencies
+            deltaVec = self.filterSettings.deltas
+            ampVec = self.filterSettings.amplitudes
+            self.rate = self.filterSettings.rate
+            filter = filters.Filter(wVec, deltaVec, ampVec)
+            self.fil = filter.filterMB()
         self.queue = deque(list(np.zeros(len(self.fil))))
 
+    def getFilter(self):
+        return self.fil[::-1]
+
+    def getRate(self):
+        return self.rate
+
+    def getFilterWindow(self):
+        return self.fil.getWindow()
 
     def newFilter(self, filter):
         self.fil = np.array(filter[::-1])

@@ -237,3 +237,7 @@ def filterSignal(s, fil):
     s = np.array(s)
     y = np.dot(s, fil)
     return y
+
+#returns discrete frequency vector normalized (Hz to rads/pi)
+def toDiscreteFrequency(frequencies, fsampling):
+    return [2 * f / fsampling for f in frequencies]

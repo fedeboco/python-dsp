@@ -14,16 +14,15 @@ def plot(vector, yAxisLabel = "y"):
     ax.autoscale_view(True,True,True) # for multiprocessing
     fig.canvas.draw()
 
-def plotFilterResponse(vector, yAxisLabel = "fft(x[n])"):
-    pi = 3.14159265358979323846
-    L = len(vector)
-    x = [n * 2 * pi / L for n in range(0,L)]
+def plotFilterResponse(vector, rate, yAxisLabel = "fft(x[n])"):
+    L = int(len(vector) / 2)
+    x = [n * rate / L / 1000 for n in range(L)]
     fig = plt.figure()
-    plt.plot(x, vector)
+    plt.plot(x, vector[:L], 'ko--', linewidth=1, markersize=2, )
     plt.show(block=False)
     plt.grid()
-    plt.xlabel('w')
-    plt.ylabel(yAxisLabel + " (w)")
+    plt.xlabel('f [kHz]')
+    plt.ylabel(yAxisLabel + " (f)")
     plt.title(yAxisLabel)
     ax = plt.gca()
     ax.relim()
