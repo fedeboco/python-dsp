@@ -2,8 +2,7 @@ import pyaudio
 import time
 import numpy as np
 from filters import filters
-
-# pip install PyAudio‑0.2.11‑cp38‑cp38‑win_amd64.whl
+from collections import deque
 
 class MicFilter:
     width = 2
@@ -11,8 +10,9 @@ class MicFilter:
     rate = 22050
     p = pyaudio.PyAudio()
     fil = [1]
-    queue = list(np.zeros(len(fil)))
+    queue = deque(list(np.zeros(len(fil))))
     stream = 0
+    stopFiltering = False
 
     def __init__(self, *args, **kwargs):
         if  'filter' in kwargs:
@@ -22,7 +22,10 @@ class MicFilter:
             self.channels = kwargs['channels']
         if 'width' in kwargs:
             self.width = kwargs['width']
-        self.queue = list(np.zeros(len(self.fil)))
+        if 'stopFlag' in kwargs:
+            self.stopFiltering = kwargs['stopFlag']
+        self.queue = deque(list(np.zeros(len(self.fil))))
+
 
     def newFilter(self, filter):
         self.fil = np.array(filter[::-1])
@@ -36,34 +39,39 @@ class MicFilter:
                         stream_callback=self.callback)
 
         self.stream.start_stream()
-        self.blockStreaming()
-        self.stopStream()
-
+        self.keepAliveStream()
 
     def callback(self, inData, frameCount, timeInfo, status):
         signalChunck = np.frombuffer(inData, dtype=np.int16)
         filteredChunck = ()
         ran = range(0, frameCount, 1)
         for n in ran:
-            self.updateQueue(signalChunck[n])
-            filteredSample = filters.filterSignal(self.queue[-len(self.fil):], self.fil)
+            self.queue.append(signalChunck[n])
+            self.queue.popleft()
+            filteredSample = filters.filterSignal(self.queue, self.fil)
             filteredChunck = np.append(filteredChunck, filteredSample)
         return (filteredChunck.astype(np.int16).tostring(), pyaudio.paContinue)
 
-    def blockStreaming(self):
-        while self.stream.is_active():
-            time.sleep(0.1)
-
-    def updateQueue(self, amplitudeValue):
-        self.queue.append(amplitudeValue)
-        self.queue.pop(0)
+    def keepAliveStream(self):
+        while (self.stream.is_active() and self.stopFiltering.value == False):
+            time.sleep(1)
+        self.stopStream()
 
     def stopStream(self):
         self.stream.stop_stream()
         self.stream.close()
         self.p.terminate()
 
-
+    def devicesInfo(self):
+        for i in range(self.p.get_device_count()):
+            device = self.p.get_device_info_by_index(i)
+            inputs = device.get('maxInputChannels', 0)
+            if inputs > 0:
+                name = device.get('name')
+                rate = device.get('defaultSampleRate')
+                print("Device {i}: {name} (Max Channels: {inputs}, {rate} Hz)".format(
+                    i=i, name=name, inputs=inputs, rate=int(rate)
+                ))
 
 
 

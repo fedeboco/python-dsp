@@ -67,7 +67,6 @@ class Filter:
     def filterMB(self):
         hd = idealMB(list(self.values.keys()), self.A, self.window.M)
         h = [hd[n] * self.window.values[n] for n in range(0, self.window.M)]
-        print(len(self.window.values), len(h), self.window.M)
         return h
 
 def idealLP(wc, M, A = 1):

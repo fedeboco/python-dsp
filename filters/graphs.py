@@ -1,28 +1,38 @@
 import matplotlib.pyplot as plt
+import time
 
 def plot(vector, yAxisLabel = "y"):
-    plt.figure()
+    fig = plt.figure()
     plt.plot(vector)
     plt.show(block=False)
     plt.grid()
     plt.xlabel('n')
     plt.ylabel(yAxisLabel + " [n]")
     plt.title(yAxisLabel)
+    ax = plt.gca()
+    ax.relim()
+    ax.autoscale_view(True,True,True) # for multiprocessing
+    fig.canvas.draw()
 
 def plotFilterResponse(vector, yAxisLabel = "fft(x[n])"):
     pi = 3.14159265358979323846
     L = len(vector)
     x = [n * 2 * pi / L for n in range(0,L)]
-    plt.figure()
+    fig = plt.figure()
     plt.plot(x, vector)
     plt.show(block=False)
     plt.grid()
     plt.xlabel('w')
     plt.ylabel(yAxisLabel + " (w)")
     plt.title(yAxisLabel)
+    ax = plt.gca()
+    ax.relim()
+    ax.autoscale_view(True,True,True) # for multiprocessing
+    fig.canvas.draw()
 
-def closeAll():
-    input("q to quit.\n")
+def closeAll(quitRequested):
+    while (not quitRequested.value):
+        time.sleep(1)
     plt.close('all')
 
 def multiPlot(vectors, rows = 1, cols = 1, legends= []):
