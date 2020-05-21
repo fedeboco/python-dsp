@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="back">
+    <file>UI.jpg</file>
+  </qresource>
+</RCC>
