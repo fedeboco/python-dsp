@@ -14,9 +14,9 @@ def plotMyFilter(filter, rate, exitProgram):
     graphs.plotFilterResponse(abs(f), rate, "Multiband Filter")
     graphs.closeAll(exitProgram)
 
-def filterMyMic(speech):
+def filterMyMic(speech, updatedFil, updatesAvailable):
     speech.devicesInfo()
-    speech.startStream()    
+    speech.startStream(updatedFil, updatesAvailable)    
 
 def testSettings():
     d = 0.08
@@ -29,20 +29,29 @@ def testSettings():
 def GUI(exitProgram, queue):
     gui.runUserGUI(exitProgram, queue)
 
-def updateFilter(queue):
-    filUpdater = updater.filterUpdater(queue)
-    filUpdater.update()
+def updateFilter(exitProgram, queue, filSets, updatedFil, updatesAvailable):
+    filUpdater = updater.filterUpdater(queue, filterSettings = filSets)
+    filUpdater.update(updatedFil, updatesAvailable)
 
 if __name__ == '__main__':
     exitProgram = mp.Value('b', False)
-    queue = mp.Queue()
+    queue = mp.Queue(maxsize=int(5))
+    manager = mp.Manager()
+    updatedFil = manager.list()
+    updatesAvailable = mp.Value('b', False)
     
     speech = mic.MicFilter( filterSettings = testSettings(), 
                             stopFlag = exitProgram )
     processes = []
-    processes.append(mp.Process(target=GUI, args=(exitProgram, queue, )))
-    processes.append(mp.Process(target=filterMyMic, args=(speech, )))
-    processes.append(mp.Process(target=updateFilter, args=(queue, )))
+    processes.append(mp.Process(target=GUI, args=(  exitProgram, queue, )))
+    processes.append(mp.Process(target=filterMyMic, args=(  speech, 
+                                                            updatedFil, 
+                                                            updatesAvailable, )))
+    processes.append(mp.Process(target=updateFilter, args=( exitProgram, 
+                                                            queue, 
+                                                            testSettings(), 
+                                                            updatedFil, 
+                                                            updatesAvailable, )))
 
     for process in processes:
         process.start()

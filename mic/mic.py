@@ -46,21 +46,28 @@ class MicFilter:
     def getFilterWindow(self):
         return self.fil.getWindow()
 
-    def newFilter(self, filter):
-        self.fil = np.array(filter[::-1])
+    def newFilter(self, customFilter):
+        self.fil = np.array(customFilter[::-1])
 
-    def startStream(self):
+    def startStream(self, updatedFil, updatesAvailable):
+        call = (lambda i, f, t, st, fil = updatedFil, ua = updatesAvailable : 
+                self.filterCallback(i, f, t, st, fil, ua))
         self.stream = self.p.open(format=self.p.get_format_from_width(self.width),
                         channels=self.channels,
                         rate=self.rate,
                         input=True,
                         output=True,
-                        stream_callback=self.filterCallback)
+                        stream_callback = call)
 
         self.stream.start_stream()
         self.keepAliveStream()
 
-    def filterCallback(self, inData, frameCount, timeInfo, status):
+    def filterCallback(self, inData, frameCount, timeInfo, status, fil, ua):
+        updatesAvailable = ua.value
+        if (updatesAvailable):
+            ua.value = False
+            self.fil = list(fil)
+            self.queue = deque(list(np.zeros(len(self.fil))))
         signalChunck = np.frombuffer(inData, dtype=np.int16)
         filteredChunck = ()
         ran = range(0, frameCount, 1)
