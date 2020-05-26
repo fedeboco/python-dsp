@@ -7,6 +7,7 @@ import multiprocessing as mp
 import time
 from filters import settings
 from mic import gui
+from mic import filupdater as updater
 
 def plotMyFilter(filter, rate, exitProgram):
     f = np.fft.fft(filter)
@@ -25,18 +26,23 @@ def testSettings():
     A = [0, 1, 0.8, 0, 1, 0.3]
     return settings.filterSettings(f, delta, A, rate)
 
-def GUI(exitProgram):
-    gui.runUserGUI(exitProgram)
+def GUI(exitProgram, queue):
+    gui.runUserGUI(exitProgram, queue)
+
+def updateFilter(queue):
+    filUpdater = updater.filterUpdater(queue)
+    filUpdater.update()
 
 if __name__ == '__main__':
     exitProgram = mp.Value('b', False)
-
+    queue = mp.Queue()
+    
     speech = mic.MicFilter( filterSettings = testSettings(), 
                             stopFlag = exitProgram )
     processes = []
-    processes.append(mp.Process(target=GUI, args=(exitProgram, )))
+    processes.append(mp.Process(target=GUI, args=(exitProgram, queue, )))
     processes.append(mp.Process(target=filterMyMic, args=(speech, )))
-    #processes.append(mp.Process(target=plotMyFilter, args=(speech.getFilter(), speech.getRate(), exitProgram)))
+    processes.append(mp.Process(target=updateFilter, args=(queue, )))
 
     for process in processes:
         process.start()

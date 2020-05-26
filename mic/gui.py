@@ -1,7 +1,11 @@
 # This Python file uses the following encoding: utf-8
+import time
 import sys
 import os
+import ctypes
+from filters.settings import guiSettings
 from mic import handlers as han
+from multiprocessing import Queue
 
 from PySide2.QtWidgets import QApplication, QWidget, QSlider, QPlainTextEdit
 from PySide2.QtWidgets import QRadioButton, QButtonGroup, QComboBox, QLabel
@@ -16,8 +20,6 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
-
-import ctypes
 
 myappid = 'bokus-filter' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
@@ -35,32 +37,35 @@ class micGui(QWidget):
     resolIndex = -1
     rateIndex = -1
     filterIndex = -1
-
-    def __init__(self, numberOfHandles = 10):
+    guiSettings = guiSettings(initValues = [0, 2, 3, 0, 50])
+    queue = Queue()
+    
+    def __init__(self, queue, numberOfHandles = 10):
         super(micGui, self).__init__()
         self.setupGui(numberOfHandles)
+        self.queue = queue
 
-    # True if some option has changed
-    def hasUpdates(self):
-        return self.changesAvailable
+    # # True if some option has changed
+    # def hasUpdates(self):
+    #     return self.changesAvailable
 
-    def updateIndex(self):
-        return self.changed
+    # def updateIndex(self):
+    #     return self.changed
 
-    def getRate(self):
-        return self.comboBoxRate.currentIndex()
+    # def getRate(self):
+    #     return self.comboBoxRate.currentIndex()
 
-    def getResolution(self):
-        return self.comboBoxResol.currentIndex()
+    # def getResolution(self):
+    #     return self.comboBoxResol.currentIndex()
 
-    def getFilterType(self):
-        return self.filterIndex
+    # def getFilterType(self):
+    #     return self.filterIndex
 
-    def getHandleNumber(self):
-        return self.handleUpdated
+    # def getHandleNumber(self):
+    #     return self.handleUpdated
 
-    def getHandleValue(self):
-        return self.handlers.value[self.handleUpdated]
+    # def getHandleValue(self):
+    #     return self.handlers.value[self.handleUpdated]
      
     def setupGui(self, numberOfHandles):
         self.configWindow()
@@ -79,9 +84,10 @@ class micGui(QWidget):
         self.changed = 0
 
     def setHandlers(self, newVal, handlerID):
-        val = [handlerID, newVal]
-        print(self.handlers.value)
-        self.handlers.value = val
+        self.guiSettings.updatesAvailable = True
+        self.guiSettings.handleSelected = handlerID
+        self.guiSettings.handleValue = newVal
+        self.queue.put(self.guiSettings)
 
     def resolutionOptions(self):
         resolutions = ["Ultra High", "High", "Normal", "Low", "Ultra Low"]
@@ -101,10 +107,11 @@ class micGui(QWidget):
         self.changed = changeCode
         if (changeCode == 3):
             self.rateIndex = newVal
-            self.getRate()
+            self.guiSettings.rateSelected = newVal
         elif (changeCode == 2):
             self.resolIndex = newVal
-            self.getResolution()
+            self.guiSettings.resolutionSelected = newVal
+        self.queue.put(self.guiSettings)
 
     def configureBackground(self):
         image = "mic/gui/filter-gui/UI.jpg"
@@ -170,7 +177,6 @@ class micGui(QWidget):
         slider.setInvertedAppearance(False)
         return slider
 
-
     def load_ui(self):
         loader = QUiLoader()
         path = os.path.join(os.path.dirname(__file__), "./gui/filter-gui/form2.ui")
@@ -203,13 +209,16 @@ class micGui(QWidget):
         
     def buttonChecked(self, idButton):
         self.filterIndex = idButton
+        self.guiSettings.filterSelected = idButton
+        self.queue.put(self.guiSettings)
 
     def sys_exit(self, exitProgram):
         self.app.exec_()
         exitProgram.value = True
+        self.queue.put(None)
         sys.exit()
 
-def runUserGUI(exitProgram):
-    widget = micGui()
+def runUserGUI(exitProgram, queue):
+    widget = micGui(queue)
     widget.show()
     widget.sys_exit(exitProgram)
