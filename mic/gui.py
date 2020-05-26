@@ -34,18 +34,34 @@ class micGui(QWidget):
     comboBoxRate = 0
     resolIndex = -1
     rateIndex = -1
+    filterIndex = -1
 
     def __init__(self, numberOfHandles = 10):
         super(micGui, self).__init__()
         self.setupGui(numberOfHandles)
 
-    # True if some handler has changed
-    def checkHandlersStatus(self):
-        if (self.changesAvailable):
-            self.changesAvailable = False
-            return True
-        return False
-      
+    # True if some option has changed
+    def hasUpdates(self):
+        return self.changesAvailable
+
+    def updateIndex(self):
+        return self.changed
+
+    def getRate(self):
+        return self.comboBoxRate.currentIndex()
+
+    def getResolution(self):
+        return self.comboBoxResol.currentIndex()
+
+    def getFilterType(self):
+        return self.filterIndex
+
+    def getHandleNumber(self):
+        return self.handleUpdated
+
+    def getHandleValue(self):
+        return self.handlers.value[self.handleUpdated]
+     
     def setupGui(self, numberOfHandles):
         self.configWindow()
         self.configureBackground()
@@ -78,12 +94,6 @@ class micGui(QWidget):
         self.comboBoxRate = self.setComboBox(3, 550, 204, "comboBoxRate", rates)
         l = lambda optionSelected, optionIndex = 3: self.updateComboBoxStatus(optionSelected, optionIndex)
         self.comboBoxRate.currentIndexChanged[int].connect(l)
-
-    def getRate(self):
-        return self.comboBoxRate.currentIndex()
-
-    def getResolution(self):
-        return self.comboBoxResol.currentIndex()
 
     @QtCore.Slot(int)
     def updateComboBoxStatus(self, newVal, changeCode):
@@ -181,13 +191,18 @@ class micGui(QWidget):
                                 checked = False, 
                                 xPos = 0, yPos = 0, 
                                 idButton = 0):
-        self.button = QRadioButton(self)
-        self.button.setObjectName(name)
-        self.button.setEnabled(True)
-        self.button.setGeometry(QRect(xPos, yPos, 82, 17))
-        self.button.setCursor(QCursor(Qt.PointingHandCursor))
-        self.button.setChecked(checked)
-        self.filterTypeButtons.addButton(self.button, idButton)
+        button = QRadioButton(self)
+        button.setObjectName(name)
+        button.setEnabled(True)
+        button.setGeometry(QRect(xPos, yPos, 82, 17))
+        button.setCursor(QCursor(Qt.PointingHandCursor))
+        button.setChecked(checked)
+        lam = lambda id = idButton : self.buttonChecked(id)
+        self.connect(button, SIGNAL("clicked()"), lam)
+        self.filterTypeButtons.addButton(button, idButton)
+        
+    def buttonChecked(self, idButton):
+        self.filterIndex = idButton
 
     def sys_exit(self, exitProgram):
         self.app.exec_()
