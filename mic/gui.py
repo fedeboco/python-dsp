@@ -11,7 +11,7 @@ from PySide2.QtGui import QIcon
 from PySide2.QtCore import QSize
 from PySide2 import QtCore
 from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt, SLOT, SIGNAL)
 from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
     QPixmap, QRadialGradient)
@@ -27,8 +27,17 @@ class micGui(QWidget):
     app = QApplication([])
     handlers = han.Handlers(50)
     changesAvailable = True
+    changed = -1 #0: handle, #1: type, #2: resolution, #3: rate
     handleUpdated = -1
     sliders = []
+    comboBoxResol = 0
+    comboBoxRate = 0
+    resolIndex = -1
+    rateIndex = -1
+
+    def __init__(self, numberOfHandles = 10):
+        super(micGui, self).__init__()
+        self.setupGui(numberOfHandles)
 
     # True if some handler has changed
     def checkHandlersStatus(self):
@@ -36,11 +45,7 @@ class micGui(QWidget):
             self.changesAvailable = False
             return True
         return False
-
-    def __init__(self, numberOfHandles = 10):
-        super(micGui, self).__init__()
-        self.setupGui(numberOfHandles)
-        
+      
     def setupGui(self, numberOfHandles):
         self.configWindow()
         self.configureBackground()
@@ -55,6 +60,7 @@ class micGui(QWidget):
     def updateHandlersStatus(self, handleNumber):
         self.changesAvailable = True
         self.handleUpdated = handleNumber
+        self.changed = 0
 
     def setHandlers(self, newVal, handlerID):
         val = [handlerID, newVal]
@@ -63,11 +69,32 @@ class micGui(QWidget):
 
     def resolutionOptions(self):
         resolutions = ["Ultra High", "High", "Normal", "Low", "Ultra Low"]
-        self.setComboBox(2, 550, 155, "comboBox", resolutions)
+        self.comboBoxResol = self.setComboBox(2, 550, 155, "comboBoxResol", resolutions)
+        l = lambda optionSelected, optionIndex = 2: self.updateComboBoxStatus(optionSelected, optionIndex)
+        self.comboBoxResol.currentIndexChanged[int].connect(l)
 
     def samplingRateOptions(self):
         rates = ["48000", "44100", "32000", "22050", "11025", "8000"]
-        self.setComboBox(3, 550, 204, "comboBox_2", rates)
+        self.comboBoxRate = self.setComboBox(3, 550, 204, "comboBoxRate", rates)
+        l = lambda optionSelected, optionIndex = 3: self.updateComboBoxStatus(optionSelected, optionIndex)
+        self.comboBoxRate.currentIndexChanged[int].connect(l)
+
+    def getRate(self):
+        return self.comboBoxRate.currentIndex()
+
+    def getResolution(self):
+        return self.comboBoxResol.currentIndex()
+
+    @QtCore.Slot(int)
+    def updateComboBoxStatus(self, newVal, changeCode):
+        self.changesAvailable = True
+        self.changed = changeCode
+        if (changeCode == 3):
+            self.rateIndex = newVal
+            self.getRate()
+        elif (changeCode == 2):
+            self.resolIndex = newVal
+            self.getResolution()
 
     def configureBackground(self):
         image = "mic/gui/filter-gui/UI.jpg"
@@ -85,12 +112,13 @@ class micGui(QWidget):
                     xPos = 0, yPos = 0, 
                     objName = "default",
                     items = []):
-        self.comboBox = QComboBox(self)
+        combo = QComboBox(self)
         for item in items:
-            self.comboBox.addItem(item)
-        self.comboBox.setObjectName(u"comboBox")
-        self.comboBox.setGeometry(QRect(xPos, yPos, 125, 22))
-        self.comboBox.setCurrentIndex(startingIndex)
+            combo.addItem(item)
+        combo.setObjectName(objName)
+        combo.setGeometry(QRect(xPos, yPos, 125, 22))
+        combo.setCurrentIndex(startingIndex)
+        return combo
 
     def configIcons(self):
         self.app_icon.addFile('mic/gui/filter-gui/icon/icon16.png', QSize(16,16))

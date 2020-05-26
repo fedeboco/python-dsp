@@ -55,12 +55,12 @@ class MicFilter:
                         rate=self.rate,
                         input=True,
                         output=True,
-                        stream_callback=self.callback)
+                        stream_callback=self.filterCallback)
 
         self.stream.start_stream()
         self.keepAliveStream()
 
-    def callback(self, inData, frameCount, timeInfo, status):
+    def filterCallback(self, inData, frameCount, timeInfo, status):
         signalChunck = np.frombuffer(inData, dtype=np.int16)
         filteredChunck = ()
         ran = range(0, frameCount, 1)
