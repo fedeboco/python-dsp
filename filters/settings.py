@@ -40,8 +40,8 @@ class guiSettings:
             self.handleValue = init[4]      
 
     def printSettings(self):
-        print("filType:", self.filterSelected, end=" ")
-        print("res:", self.resolutionSelected, end=" ")
-        print("rate:", self.rateSelected, end=" ")
-        print("handle:", self.handleSelected, end=" ")      
-        print(self.handleValue, end=" ")
+        print("filType:", self.filterSelected, end=", ")
+        print("res:", self.resolutionSelected, end=", ")
+        print("rate:", self.rateSelected, end=", ")
+        print("handle: [", self.handleSelected, end=", ")      
+        print(self.handleValue, "]")

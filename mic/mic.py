@@ -34,7 +34,7 @@ class MicFilter:
             ampVec = self.filterSettings.amplitudes
             self.rate = self.filterSettings.rate
             filter = filters.Filter(wVec, deltaVec, ampVec)
-            self.fil = filter.filterMB()
+            self.fil = filter.build()
         self.queue = deque(list(np.zeros(len(self.fil))))
 
     def getFilter(self):
@@ -63,19 +63,35 @@ class MicFilter:
         self.keepAliveStream()
 
     def filterCallback(self, inData, frameCount, timeInfo, status, fil, ua):
+        start = time.time() * 1000000
         updatesAvailable = ua.value
+        a = time.time() * 1000000
         if (updatesAvailable):
             ua.value = False
             self.fil = list(fil)
             self.queue = deque(list(np.zeros(len(self.fil))))
+        b = time.time() * 1000000
         signalChunck = np.frombuffer(inData, dtype=np.int16)
         filteredChunck = ()
         ran = range(0, frameCount, 1)
+        c = time.time() * 1000000
+        s2 = 0; s3 = 0; s4 = 0; s5 = 0
         for n in ran:
+            c1 = time.time() * 1000000
             self.queue.append(signalChunck[n])
+            c2 = time.time() * 1000000
+            s2 = s2 + c2 - c1
             self.queue.popleft()
+            c3 = time.time() * 1000000
+            s3 = s3 + c3 - c2
             filteredSample = filters.filterSignal(self.queue, self.fil)
+            c4 = time.time() * 1000000
+            s4 = s4 + c4 - c3
             filteredChunck = np.append(filteredChunck, filteredSample)
+            c5 = time.time() * 1000000
+            s5 = s5 + c5 - c4
+        d = time.time() * 1000000
+        print("[", a-start, b-a, c-b, d-c, "] [", s2, s3, s4, s5, "]")
         return (filteredChunck.astype(np.int16).tostring(), pyaudio.paContinue)
 
     def keepAliveStream(self):

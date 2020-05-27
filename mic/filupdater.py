@@ -1,4 +1,4 @@
-from multiprocessing import Queue, Value
+from multiprocessing import Queue, Value, Manager
 from filters.settings import guiSettings
 from filters import filters
 import numpy as np
@@ -25,25 +25,24 @@ class filterUpdater():
             deltaVec = self.filterSettings.deltas
             ampVec = self.filterSettings.amplitudes
             self.rate = self.filterSettings.rate
-            filter = filters.Filter(wVec, deltaVec, ampVec)
-            self.fil = filter.filterMB()
+            self.filter = filters.Filter(wVec, deltaVec, ampVec)
+            self.fil = self.filter.build()
 
     def getQueue(self):
         return self.queue
 
     def update(self, updatedFil, updatesAvailable):
-        #testing#################
-        updatedFil.append(1)
-        for i in range(80): 
-            updatedFil.append(0)
-        #########################
         while ( True ):
             self.guiSettings = self.queue.get()
             if ( self.guiSettings == None ):
                 break
-            updatesAvailable.value = True
             self.guiSettings.printSettings()
-            self.newFilter()
+            self.newFilter(self.guiSettings.handleValue, self.guiSettings.handleSelected)
+            updatedFil[:] = [] 
+            for n in range(len(self.fil)):
+                updatedFil.append(self.fil[n])
+            updatesAvailable.value = True
 
-    def newFilter(self):
-        print("new filter")
+    def newFilter(self, A, band):
+        A = A / 99.0 * 2.0
+        self.fil = self.filter.modifyBandAmplitude(A, band)
