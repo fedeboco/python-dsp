@@ -37,9 +37,8 @@ def updateFilter(exitProgram, queue, filSets, updatedFil, updatesAvailable):
 
 if __name__ == '__main__':
     exitProgram = mp.Value('b', False)
-    queue = mp.Queue(maxsize=int(5))
-    manager = mp.Manager()
-    updatedFil = manager.list()
+    queue = mp.Queue(maxsize=int(1))
+    updatedFil = mp.Queue(maxsize=int(1))
     updatesAvailable = mp.Value('b', False)
     
     speech = mic.MicFilter( filterSettings = testSettings(), 

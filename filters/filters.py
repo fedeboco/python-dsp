@@ -67,7 +67,7 @@ class Filter:
     def filterBP(self, wl, wh):
         return idealBP(wl, wh, self.window.M)
 
-    def build(self):
+    def buildOld(self):
         self.cutFreqs = cutoffFrequencies(list(self.values.keys()))
         amplitude = self.A
         M = self.window.M
@@ -87,10 +87,53 @@ class Filter:
         self.fil = h
         return h
 
+    def build(self):
+        self.cutFreqs = cutoffFrequencies(list(self.values.keys()))
+        amplitude = self.A
+        M = self.window.M
+        self.bandFilters = []
+        win = self.window.values
+                
+        firstBand = idealLP(self.cutFreqs[0], M, amplitude[0]) * win
+        h = firstBand
+        self.bandFilters.append(firstBand)
+
+        for i in range(len(self.cutFreqs) - 1):
+            band = idealBP(self.cutFreqs[i], self.cutFreqs[i + 1], M, amplitude[i + 1]) * win
+            h = h + band
+            self.bandFilters.append(band)
+
+        lastBand = idealHP(self.cutFreqs[-1], M, amplitude[-1]) * win
+        h = h + lastBand
+        self.bandFilters.append(lastBand)
+
+        self.fil = h
+        return h
+
     def getFilterBands(self):
         return self.bandFilters
 
     def modifyBandAmplitude(self, amplitude, bandIndex):
+        i = bandIndex
+        band = self.bandFilters[i]
+        freqs = self.cutFreqs
+        M = self.window.M
+        win = self.window.values
+
+        self.fil = self.fil - band
+
+        if (bandIndex == 0):
+            h = idealLP(freqs[0], M, amplitude) * win
+        elif (bandIndex == len(self.bandFilters) - 1):
+            h = idealHP(freqs[-1], M, amplitude) * win
+        else:
+            h = idealBP(freqs[i - 1], freqs[i], M, amplitude) * win
+        
+        self.bandFilters[i] = h
+        self.fil = self.fil + h
+        return self.fil
+
+    def modifyBandAmplitudeOld(self, amplitude, bandIndex):
         i = bandIndex
         band = self.bandFilters[i]
         freqs = self.cutFreqs
@@ -115,50 +158,38 @@ class Filter:
 
 def idealLP(wc, M, A = 1):
     tau = M / 2.0
-    pi = fmath.pi
-    h = []
-    for n in range(0, M):
-        aux = n - tau
-        if (aux != 0):
-            h.append( A * fmath.sin(wc * aux) / (pi * aux) )
-        else:
-            h.append( A * 1 )
+    pi = np.pi
+    x = np.linspace(wc * (-tau) / pi, wc * (M - tau) / pi, M)
+    h = np.sinc(x)
+    h = np.multiply(h, A * wc / pi)
     return h
 
 def idealAP(M, A = 1):
     tau = M / 2.0
-    pi = fmath.pi
-    h = []
-    for n in range(0, M):
-        aux = n - tau
-        if (aux != 0):
-            h.append( A * fmath.sin(pi * aux) / (pi * aux) )
-        else:
-            h.append( A * 1 )
+    x = np.linspace(-tau, M - tau, M)
+    h = np.sinc(x)
+    h = np.multiply(h, A)
     return h
 
 def idealHP(wc, M, A = 1):
-    ap = idealAP(M)
-    lp = idealLP(wc, M)
-    h = [ A * (ap[n] - lp[n]) for n in range(0, M) ]
-    return h
+    ap = idealAP(M, A)
+    lp = idealLP(wc, M, A)
+    return ap - lp
 
 def idealBP(wl, wh, M, A = 1):
-    if (wl >= wh):
-        print("wlow > whigh")
-    lp1 = idealLP(wh, M)
-    lp2 = idealLP(wl, M)
-    return [ A * (lp1[n] - lp2[n]) for n in range(0, M) ]
+    lp1 = idealLP(wh, M, A)
+    lp2 = idealLP(wl, M, A)
+    return lp1 - lp2
 
 def idealMB(wVector, amplitude, M, iBP):
     wVector = cutoffFrequencies(wVector)
     h = idealLP(wVector[0], M, amplitude[0])
     aux = idealHP(wVector[-1], M, amplitude[-1])
-    h = [ h[n] + aux[n] for n in range(0, M) ] 
+    h = h + aux
     iBP = []
-    for i in range(0, len(wVector) - 1):
+    for i in range(len(wVector) - 1):
         iBP.append(idealBP(wVector[i], wVector[i + 1], M, amplitude[i + 1]))
-        h = [ h[n] + iBP[-1][n] for n in range(0, M) ]
+        h =  h + iBP[-1]
     return h
 
 def cutoffFrequencies(wVector):

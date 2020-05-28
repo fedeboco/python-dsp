@@ -44,29 +44,7 @@ class micGui(QWidget):
         super(micGui, self).__init__()
         self.setupGui(numberOfHandles)
         self.queue = queue
-
-    # # True if some option has changed
-    # def hasUpdates(self):
-    #     return self.changesAvailable
-
-    # def updateIndex(self):
-    #     return self.changed
-
-    # def getRate(self):
-    #     return self.comboBoxRate.currentIndex()
-
-    # def getResolution(self):
-    #     return self.comboBoxResol.currentIndex()
-
-    # def getFilterType(self):
-    #     return self.filterIndex
-
-    # def getHandleNumber(self):
-    #     return self.handleUpdated
-
-    # def getHandleValue(self):
-    #     return self.handlers.value[self.handleUpdated]
-     
+    
     def setupGui(self, numberOfHandles):
         self.configWindow()
         self.configureBackground()

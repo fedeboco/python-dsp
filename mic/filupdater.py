@@ -38,9 +38,7 @@ class filterUpdater():
                 break
             self.guiSettings.printSettings()
             self.newFilter(self.guiSettings.handleValue, self.guiSettings.handleSelected)
-            updatedFil[:] = [] 
-            for n in range(len(self.fil)):
-                updatedFil.append(self.fil[n])
+            updatedFil.put(self.fil)
             updatesAvailable.value = True
 
     def newFilter(self, A, band):
