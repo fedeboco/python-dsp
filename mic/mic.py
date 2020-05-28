@@ -1,3 +1,4 @@
+from timeit import default_timer as timer
 import pyaudio
 import time
 import numpy as np
@@ -16,6 +17,8 @@ class MicFilter:
     stream = 0
     filterSettings = 0
     stopFiltering = False
+    circularArray = 0
+    K = 0
 
     def __init__(self, *args, **kwargs):
         if  'filter' in kwargs:
@@ -36,6 +39,8 @@ class MicFilter:
             filter = filters.Filter(wVec, deltaVec, ampVec)
             self.fil = filter.build()
         self.queue = deque(list(np.zeros(len(self.fil))))
+        self.circularArray = np.zeros(len(self.fil), dtype = float)
+        self.K = 0
 
     def getFilter(self):
         return self.fil[::-1]
@@ -63,35 +68,102 @@ class MicFilter:
         self.keepAliveStream()
 
     def filterCallback(self, inData, frameCount, timeInfo, status, fil, ua):
-        start = time.time() * 1000000
         updatesAvailable = ua.value
-        a = time.time() * 1000000
         if (updatesAvailable):
             ua.value = False
             self.fil = list(fil)
             self.queue = deque(list(np.zeros(len(self.fil))))
-        b = time.time() * 1000000
+            self.circularArray = np.zeros(len(self.fil))
+            self.K = 0 #circularArray index
+        signalChunck = np.frombuffer(inData, dtype=np.int16)
+        filteredChunck = np.zeros(len(signalChunck), dtype = float)
+        ran = range(frameCount)
+        K = self.K
+        M = len(self.circularArray)
+        A = np.zeros([len(signalChunck), len(self.fil)], dtype = float)
+        for n in ran:
+            self.circularArray[K] = signalChunck[n]
+            A[n, M-K:] = self.circularArray[:K]
+            A[n, :M-K] = self.circularArray[K:M]
+            if (K == len(self.circularArray) - 1):
+                K = 0
+            else:
+                K += 1
+        filteredChunck = A.dot(self.fil)
+        self.K = K
+        return (filteredChunck.astype(np.int16).tostring(), pyaudio.paContinue)
+
+    def filterCallbackOld2(self, inData, frameCount, timeInfo, status, fil, ua):
+        updatesAvailable = ua.value
+        if (updatesAvailable):
+            ua.value = False
+            self.fil = list(fil)
+            self.queue = deque(list(np.zeros(len(self.fil))))
+            self.circularArray = np.zeros(len(self.fil))
+            self.K = 0 #circularArray index
+        signalChunck = np.frombuffer(inData, dtype=np.int16)
+        filteredChunck = np.zeros(len(signalChunck))
+        ran = range(frameCount)
+        K = self.K
+        M = len(self.circularArray)
+        c = time.time()
+        s1 = 0; s2 = 0; s3 = 0; s4 = 0; s5 = 0; 
+        for n in ran:
+            c1 = time.time() * 1000000
+            self.circularArray[K] = signalChunck[n]
+            c2 = time.time() * 1000000
+            s1 = s1 + c2 - c1
+            y1 = np.dot(self.circularArray[ :K ], self.fil[ M-K : M ])
+            y2 = np.dot(self.circularArray[ K:M ], self.fil[ :M-K ])
+            c3 = time.time() * 1000000
+            s2 = s2 + c3 - c2
+            filteredSample = y1 + y2
+            c4 = time.time() * 1000000
+            s3 = s3 + c4 - c3
+            filteredChunck[n] = filteredSample
+            c5 = time.time() * 1000000
+            s4 = s4 + c5 - c4
+            if (K == len(self.circularArray) - 1):
+                K = 0
+            else:
+                K += 1
+            c6 = time.time() * 1000000
+            s5 = s5 + c6 - c5
+            print(c3 - c2, filteredSample, K, n)
+        self.K = K
+        print("time:", (time.time() - c) * 1000000, s1, s2, s3, s4, s5)
+        return (filteredChunck.astype(np.int16).tostring(), pyaudio.paContinue)
+
+    def filterCallbackOld(self, inData, frameCount, timeInfo, status, fil, ua):
+        # start = time.time() * 1000000
+        updatesAvailable = ua.value
+        # a = time.time() * 1000000
+        if (updatesAvailable):
+            ua.value = False
+            self.fil = list(fil)
+            self.queue = deque(list(np.zeros(len(self.fil))))  #crashes if commented
+        # b = time.time() * 1000000
         signalChunck = np.frombuffer(inData, dtype=np.int16)
         filteredChunck = ()
         ran = range(0, frameCount, 1)
-        c = time.time() * 1000000
-        s2 = 0; s3 = 0; s4 = 0; s5 = 0
+        # c = time.time() * 1000000
+        # s2 = 0; s3 = 0; s4 = 0; s5 = 0
         for n in ran:
-            c1 = time.time() * 1000000
+            # c1 = time.time() * 1000000
             self.queue.append(signalChunck[n])
-            c2 = time.time() * 1000000
-            s2 = s2 + c2 - c1
+            # c2 = time.time() * 1000000
+            # s2 = s2 + c2 - c1
             self.queue.popleft()
-            c3 = time.time() * 1000000
-            s3 = s3 + c3 - c2
+            # c3 = time.time() * 1000000
+            # s3 = s3 + c3 - c2
             filteredSample = filters.filterSignal(self.queue, self.fil)
-            c4 = time.time() * 1000000
-            s4 = s4 + c4 - c3
+            # c4 = time.time() * 1000000
+            # s4 = s4 + c4 - c3
             filteredChunck = np.append(filteredChunck, filteredSample)
-            c5 = time.time() * 1000000
-            s5 = s5 + c5 - c4
-        d = time.time() * 1000000
-        print("[", a-start, b-a, c-b, d-c, "] [", s2, s3, s4, s5, "]")
+            # c5 = time.time() * 1000000
+            # s5 = s5 + c5 - c4
+        # d = time.time() * 1000000
+        #print("[", a-start, b-a, c-b, d-c, "] [", s2, s3, s4, s5, "]")
         return (filteredChunck.astype(np.int16).tostring(), pyaudio.paContinue)
 
     def keepAliveStream(self):

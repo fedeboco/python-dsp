@@ -21,10 +21,11 @@ def filterMyMic(speech, updatedFil, updatesAvailable):
 def testSettings():
     d = 0.08
     rate = 22050
-    f =  [  0, 330, 660, 3000, 4000, 5000, 6000, 7000, 8000, 9000,
-            10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000] # Hz
+    k = 1e+3
+    f =  [  0, 31.5, 63, 125, 250, 500, 1*k, 2*k, 3*k, 4*k,
+            5*k, 6*k, 7*k, 8*k, 9*k, 10*k, 12*k, 13*k    ] # Hz
     delta = [d for n in range(len(f))]
-    A = [0, 1, 0.8, 0, 1, 0.3, 1, 1, 1, 1]
+    A = [1 for n in range(int(len(f) / 2) + 1)]
     return settings.filterSettings(f, delta, A, rate)
 
 def GUI(exitProgram, queue):
