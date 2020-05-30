@@ -8,10 +8,10 @@ from mic import handlers as han
 from multiprocessing import Queue
 
 from PySide2.QtWidgets import QApplication, QWidget, QSlider, QPlainTextEdit
-from PySide2.QtWidgets import QRadioButton, QButtonGroup, QComboBox, QLabel
+from PySide2.QtWidgets import QRadioButton, QButtonGroup, QComboBox, QLabel, QPushButton
 from PySide2.QtCore import QFile
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtGui import QIcon
+from PySide2.QtGui import QIcon, QPalette
 from PySide2.QtCore import QSize
 from PySide2 import QtCore
 from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
@@ -48,9 +48,10 @@ class micGui(QWidget):
     def setupGui(self, numberOfHandles):
         self.configWindow()
         self.configureBackground()
-        self.filterModeButtons()
         self.resolutionOptions()
         self.samplingRateOptions()
+        self.modeOptions()
+        self.showSettingsButton()
         for i in range(numberOfHandles):
             self.sliders.append(self.createImgSlider("./mic/gui/filter-gui/slider.png", i))
             self.sliders[i].valueChanged[int].connect(lambda val, index = i: self.setHandlers(val, index))
@@ -61,6 +62,16 @@ class micGui(QWidget):
         self.handleUpdated = handleNumber
         self.changed = 0
 
+    def showSettingsButton(self):
+        image = "./mic/gui/filter-gui/settings-button.png"
+        imageHover = "./mic/gui/filter-gui/settings-button-hover.png"
+        button = QPushButton("", self) 
+        button.setGeometry(685, 10, 24, 27)
+        button.setStyleSheet("border-radius : 50") 
+        button.setStyleSheet("QPushButton {border-image: url("+image+"); } QPushButton:hover { border-image: url("+imageHover+")}")
+        self.settingsButton = button
+
+
     def setHandlers(self, newVal, handlerID):
         self.guiSettings.updatesAvailable = True
         self.guiSettings.handleSelected = handlerID
@@ -69,15 +80,21 @@ class micGui(QWidget):
 
     def resolutionOptions(self):
         resolutions = ["Ultra High", "High", "Normal", "Low", "Ultra Low"]
-        self.comboBoxResol = self.setComboBox(2, 550, 155, "comboBoxResol", resolutions)
+        self.comboBoxResol = self.setComboBox(2, 542, 187, "comboBoxResol", resolutions)
         l = lambda optionSelected, optionIndex = 2: self.updateComboBoxStatus(optionSelected, optionIndex)
         self.comboBoxResol.currentIndexChanged[int].connect(l)
 
     def samplingRateOptions(self):
         rates = ["48000", "44100", "32000", "22050", "11025", "8000"]
-        self.comboBoxRate = self.setComboBox(3, 550, 204, "comboBoxRate", rates)
+        self.comboBoxRate = self.setComboBox(3, 542, 125, "comboBoxRate", rates)
         l = lambda optionSelected, optionIndex = 3: self.updateComboBoxStatus(optionSelected, optionIndex)
         self.comboBoxRate.currentIndexChanged[int].connect(l)
+
+    def modeOptions(self):
+        modes = ["FIR (slow)", "Butterworth (fast)", "Devil", "Goblin"]
+        self.comboBoxMode = self.setComboBox(0, 542, 63, "comboBoxMode", modes)
+        l = lambda optionSelected, optionIndex = 0: self.updateComboBoxStatus(optionSelected, optionIndex)
+        self.comboBoxMode.currentIndexChanged[int].connect(l)
 
     @QtCore.Slot(int)
     def updateComboBoxStatus(self, newVal, changeCode):
@@ -92,7 +109,7 @@ class micGui(QWidget):
         self.queue.put(self.guiSettings)
 
     def configureBackground(self):
-        image = "mic/gui/filter-gui/UI.jpg"
+        image = "mic/gui/filter-gui/UI.png"
 
         self.text_field = QPlainTextEdit(self)
         self.text_field.setDisabled(True)
@@ -113,6 +130,7 @@ class micGui(QWidget):
         combo.setObjectName(objName)
         combo.setGeometry(QRect(xPos, yPos, 125, 22))
         combo.setCurrentIndex(startingIndex)
+        combo.setStyleSheet("background-color: rgb(47, 47, 47) ; color: rgb(255, 96, 96);")
         return combo
 
     def configIcons(self):
@@ -131,10 +149,10 @@ class micGui(QWidget):
         self.setFixedSize(720, 301)
 
     def createImgSlider(self, imgPath, index):
-        xPosition = 35 + 47 * index
+        xPosition = 36 + 47 * index
         slider = QSlider(self)
         slider.setObjectName(u"slider" + str(index))
-        slider.setGeometry(QRect(xPosition, 49, 41, 191))
+        slider.setGeometry(QRect(xPosition, -1, 51, 300))
         slider.setCursor(QCursor(Qt.OpenHandCursor))
         slider.setMouseTracking(False)
         slider.setFocusPolicy(Qt.StrongFocus)
@@ -142,8 +160,8 @@ class micGui(QWidget):
         slider.setAutoFillBackground(False)
         slider.setStyleSheet(    u"QSlider::handle:vertical {\n"
                                                 "	image: url(" + imgPath + ");\n"
-                                                "	width: 50px;\n"
-                                                "	height: 13px\n"
+                                                "	width: 90px;\n"
+                                                "	height: 90px\n"
                                                 "}\n"
                                                 "\n"
                                                 "QSlider::groove:vertical{\n"

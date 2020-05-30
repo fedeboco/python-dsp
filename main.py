@@ -22,8 +22,8 @@ def testSettings():
     d = 0.08
     rate = 22050
     k = 1e+3
-    f =  [  0, 31.5, 63, 125, 250, 500, 1*k, 2*k, 3*k, 4*k,
-            5*k, 6*k, 7*k, 8*k, 9*k, 10*k, 12*k, 13*k    ] # Hz
+    f =  [  30, 55, 75, 100, 150, 175, 400, 425, 750, 775,
+            1500, 1525, 3000, 3025, 6000, 6025, 1200, 1225    ] # Hz
     delta = [d for n in range(len(f))]
     A = [1 for n in range(int(len(f) / 2) + 1)]
     return settings.filterSettings(f, delta, A, rate)
