@@ -45,3 +45,9 @@ class guiSettings:
         print("rate:", self.rateSelected, end=", ")
         print("handle: [", self.handleSelected, end=", ")      
         print(self.handleValue, "]")
+
+    def settingsChanged(self, oldSettings):
+        a = self.filterSelected != oldSettings.filterSelected
+        b = self.resolutionSelected != oldSettings.resolutionSelected
+        c = self.rateSelected != oldSettings.rateSelected
+        return a or b or c

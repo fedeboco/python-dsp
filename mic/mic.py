@@ -18,6 +18,7 @@ class MicFilter:
     stopFiltering = False
     circularArray = 0
     K = 0
+    restartFlag = False
 
     def __init__(self, *args, **kwargs):
         if  'filter' in kwargs:
@@ -53,42 +54,53 @@ class MicFilter:
     def newFilter(self, customFilter):
         self.fil = np.array(customFilter[::-1])
 
-    def startStream(self, updatedFil, updatesAvailable):
-        filterCallback = self.buildCallback(updatedFil, updatesAvailable)
+    def startStream(self, updatedFil, updatesFlag):
+        self.filCallback = self.buildCallback(updatedFil, updatesFlag)
         streamFormat = self.p.get_format_from_width(self.width)
         self.stream = self.p.open(  format = streamFormat,
                                     channels = self.channels,
                                     rate = self.rate,
                                     input = True,
                                     output = True,
-                                    stream_callback = filterCallback)
+                                    stream_callback = self.filCallback)
 
         self.stream.start_stream()
         self.keepAliveStream()
 
-    def buildCallback(self, updatedFil, updatesAvailable):
+    def buildCallback(self, updatedFil, updatesFlag):
         return (lambda  inData, 
                         frameCount, 
                         timeInfo, 
                         status, 
                         fil = updatedFil, 
-                        ua = updatesAvailable : 
+                        ua = updatesFlag : 
                 self.filterCallback(inData, frameCount, timeInfo, status, fil, ua))
 
-    def filterCallback(self, inData, frameCount, timeInfo, status, fil, updatesAvailable):
-        self.updateFilter(updatesAvailable, fil)
+    def filterCallback(self, inData, frameCount, timeInfo, status, fil, updatesFlag):
+        self.updateFilter(updatesFlag, fil)
         signalChunck = np.frombuffer(inData, dtype=np.int16)
         filteredChunck = self.filterChunck(signalChunck, frameCount)
-        return (filteredChunck, pyaudio.paContinue)
+        pyaudioStreamStatus = self.setPyAudioStreamStatus()
+        return (filteredChunck, pyaudioStreamStatus)
 
-    def updateFilter(self, updatesAvailable, fil):
-        if (updatesAvailable.value):
-            updatesAvailable.value = False
-            self.fil = fil.get()
+    def updateFilter(self, updatesFlag, fil):
+        if (updatesFlag.value):
+            updatesFlag.value = False
+            update = fil.get()
+            self.fil = update.fil
+            if (update.setsChanged):
+                self.rate = update.rate
+                self.restartFlag = True
             if (len(self.fil) != self.M):
                 self.M = len(self.fil)
                 self.circularArray = np.zeros(self.M)
                 self.K = 0 #circularArray index
+
+    def setPyAudioStreamStatus(self):
+        if (self.restartFlag):
+            return pyaudio.paComplete
+        else:
+            return pyaudio.paContinue
 
     def filterChunck(self, signalChunck, frameCount):
         ran = range(frameCount)
@@ -105,9 +117,24 @@ class MicFilter:
         self.K = K
         return A.dot(self.fil).astype(np.int16).tostring()
 
+    def restartStream(self):
+        self.stream.stop_stream()
+        self.stream.close()
+        streamFormat = self.p.get_format_from_width(self.width)
+        self.stream = self.p.open(  format = streamFormat,
+                                    channels = self.channels,
+                                    rate = self.rate,
+                                    input = True,
+                                    output = True,
+                                    stream_callback = self.filCallback)
+        self.stream.start_stream()
+
     def keepAliveStream(self):
         while (self.stream.is_active() and self.stopFiltering.value == False):
-            time.sleep(1)
+            if (self.restartFlag):
+                self.restartStream()
+                self.restartFlag = False
+            time.sleep(0.1)
         self.stopStream()
 
     def stopStream(self):
