@@ -21,7 +21,6 @@ def filterMyMic(speech, updatesQueue, updatesFlag):
 def testSettings():
     d = 0.08
     rate = 22050
-    k = 1e+3
     f =  [  30, 55, 75, 100, 150, 175, 400, 425, 750, 775,
             1500, 1525, 3000, 3025, 6000, 6025, 1200, 1225    ] # Hz
     delta = [d for n in range(len(f))]

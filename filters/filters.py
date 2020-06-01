@@ -18,6 +18,7 @@ class Filter:
         auxList = []
         auxValues = {}
         self.A = ampVector
+        self.values = {}
         pi = fmath.pi
 
         if (len(wVector) != len(deltaVector) or
@@ -43,6 +44,8 @@ class Filter:
         self.printValues()
 
     def findLimitingValues(self):
+        print("test5", self.values.keys())
+
         self.W = findLimitingW(self.values.keys())
         self.delta = findLimitingDelta(self.values.values(), self.A)
 
@@ -199,6 +202,8 @@ def cutoffFrequencies(wVector):
 def findLimitingW(wVector):
     wVector = list(wVector)
     W = np.inf
+    print("test6", wVector)
+
     for i in range(0, len(wVector), 2):
         if (wVector[i + 1] - wVector[i] < W):
             W = wVector[i + 1] - wVector[i]

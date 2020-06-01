@@ -1,6 +1,7 @@
 from multiprocessing import Queue, Value, Manager
 from filters.settings import guiSettings
 from filters import filters
+from filters.filters import toDiscreteFrequency
 import numpy as np
 
 class FilterUpdate():
@@ -62,7 +63,9 @@ class filterUpdater():
 
     def sendUpdate(self, updatesQueue, updatesAvailable):
         if (self.guiSettings.settingsChanged(self.lastGuiSettings)):
+            self.guiResolutionToFilter()
             self.updates.load(rate = self.guiRateToFilterRate())
+            print("test1", self.wVec)
             self.filter = filters.Filter(   self.wVec, 
                                             self.deltaVec, 
                                             self.ampVec )
@@ -71,6 +74,7 @@ class filterUpdater():
         else :
             self.updateAmplitudes(self.guiSettings.handleValue, self.guiSettings.handleSelected)
             self.updates.setsChanged = False
+        print(len(self.fil))
         self.updates.load(filter = self.fil)
 
         updatesQueue.put(self.updates)
@@ -83,3 +87,12 @@ class filterUpdater():
         rates = [48000, 44100, 32000, 22050, 11025, 8000]
         return rates[self.guiSettings.rateSelected]
 
+    def guiResolutionToFilter(self):
+        transitionWidth = [10, 15, 25, 30, 44]
+        t = transitionWidth[self.guiSettings.resolutionSelected]
+        startingFreqs = [30, 75, 150, 400, 750, 1500, 3000, 6000, 1200]
+        f = []
+        for freq in startingFreqs:
+            f.append(freq)
+            f.append(freq + t)
+        self.wVec = toDiscreteFrequency(f, self.rate)
