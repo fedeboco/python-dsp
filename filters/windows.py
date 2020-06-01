@@ -21,13 +21,10 @@ def rectangular(N, size = 0):
 def bartlett(N, size = 0):
     w1 = []
     w2 = []
-    isEven = N % 2
-    for i in range(0, N, 2):
-        w1.append(i / N)
-        w2.append((1 - (i + 1 * isEven) / N))
+    aux = (N - 1) / 2
+    w1 = [1 - np.abs(n - aux) / aux for n in range(N)]
     if (size > N):
-        w3 = np.zeros(size - N)
-        return np.array(np.concatenate((w1, w2, w3)))
+        w2 = np.zeros(size - N)
     elif (size != 0 and N != size):
         print("Invalid size.")
     else:

@@ -19,6 +19,7 @@ class MicFilter:
     circularArray = 0
     K = 0
     restartFlag = False
+    filterMode = 0
 
     def __init__(self, *args, **kwargs):
         if  'filter' in kwargs:
@@ -91,6 +92,7 @@ class MicFilter:
             if (update.setsChanged):
                 self.rate = update.rate
                 self.restartFlag = True
+                self.filterMode = update.mode
             if (len(self.fil) != self.M):
                 self.M = len(self.fil)
                 self.circularArray = np.zeros(self.M)
@@ -107,8 +109,18 @@ class MicFilter:
         K = self.K
         M = self.M
         A = np.zeros([frameCount, self.M], dtype = float)
+
+        if (self.filterMode == 0):
+            sig = signalChunck
+
+        elif (self.filterMode == 2):
+            sig = np.zeros(len(signalChunck))
+            n = 2
+            for i in range(n):
+                sig[i::n] = signalChunck[:int(frameCount/n):]
+
         for n in ran:
-            self.circularArray[K] = signalChunck[n]
+            self.circularArray[K] = sig[n]
             A[n, M-K:] = self.circularArray[:K]
             A[n, :M-K] = self.circularArray[K:M]
             K += 1

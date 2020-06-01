@@ -36,6 +36,7 @@ class micGui(QWidget):
     comboBoxRate = 0
     resolIndex = -1
     rateIndex = -1
+    modeIndex = -1
     filterIndex = -1
     guiSettings = guiSettings(initValues = [0, 2, 3, 0, 50])
     queue = Queue()
@@ -93,7 +94,7 @@ class micGui(QWidget):
     def modeOptions(self):
         modes = ["FIR (slow)", "Butterworth (fast)", "Devil", "Goblin"]
         self.comboBoxMode = self.setComboBox(0, 542, 63, "comboBoxMode", modes)
-        l = lambda optionSelected, optionIndex = 0: self.updateComboBoxStatus(optionSelected, optionIndex)
+        l = lambda optionSelected, optionIndex = 1: self.updateComboBoxStatus(optionSelected, optionIndex)
         self.comboBoxMode.currentIndexChanged[int].connect(l)
 
     @QtCore.Slot(int)
@@ -106,6 +107,9 @@ class micGui(QWidget):
         elif (changeCode == 2):
             self.resolIndex = newVal
             self.guiSettings.resolutionSelected = newVal
+        elif (changeCode == 1):
+            self.filterIndex = newVal
+            self.guiSettings.filterSelected = newVal
         self.queue.put(self.guiSettings)
 
     def configureBackground(self):
