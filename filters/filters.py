@@ -44,8 +44,6 @@ class Filter:
         self.printValues()
 
     def findLimitingValues(self):
-        print("test5", self.values.keys())
-
         self.W = findLimitingW(self.values.keys())
         self.delta = findLimitingDelta(self.values.values(), self.A)
 
@@ -119,6 +117,7 @@ class Filter:
     def modifyBandAmplitude(self, amplitude, bandIndex):
         i = bandIndex
         band = self.bandFilters[i]
+        self.A[i] = amplitude
         freqs = self.cutFreqs
         M = self.window.M
         win = self.window.values
@@ -202,7 +201,6 @@ def cutoffFrequencies(wVector):
 def findLimitingW(wVector):
     wVector = list(wVector)
     W = np.inf
-    print("test6", wVector)
 
     for i in range(0, len(wVector), 2):
         if (wVector[i + 1] - wVector[i] < W):

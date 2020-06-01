@@ -65,16 +65,14 @@ class filterUpdater():
         if (self.guiSettings.settingsChanged(self.lastGuiSettings)):
             self.guiResolutionToFilter()
             self.updates.load(rate = self.guiRateToFilterRate())
-            print("test1", self.wVec)
             self.filter = filters.Filter(   self.wVec, 
                                             self.deltaVec, 
-                                            self.ampVec )
+                                            self.filter.A )
             self.fil = self.filter.build()
             self.updates.setsChanged = True
-        else :
-            self.updateAmplitudes(self.guiSettings.handleValue, self.guiSettings.handleSelected)
+        else:
             self.updates.setsChanged = False
-        print(len(self.fil))
+        self.updateAmplitudes(self.guiSettings.handleValue, self.guiSettings.handleSelected)
         self.updates.load(filter = self.fil)
 
         updatesQueue.put(self.updates)
@@ -89,10 +87,13 @@ class filterUpdater():
 
     def guiResolutionToFilter(self):
         transitionWidth = [10, 15, 25, 30, 44]
+        deltas = [0.01, 0.03, 0.08, 0.3, 0.5]
         t = transitionWidth[self.guiSettings.resolutionSelected]
+        d = deltas[self.guiSettings.resolutionSelected]
         startingFreqs = [30, 75, 150, 400, 750, 1500, 3000, 6000, 1200]
         f = []
         for freq in startingFreqs:
             f.append(freq)
             f.append(freq + t)
         self.wVec = toDiscreteFrequency(f, self.rate)
+        self.deltaVec = [d for n in range(len(f))]
