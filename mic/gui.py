@@ -7,7 +7,7 @@ from filters.settings import guiSettings
 from mic import handlers as han
 from multiprocessing import Queue
 
-from PySide2.QtWidgets import QApplication, QWidget, QSlider, QPlainTextEdit
+from PySide2.QtWidgets import QApplication, QWidget, QSlider, QPlainTextEdit, QDialog, QGridLayout
 from PySide2.QtWidgets import QRadioButton, QButtonGroup, QComboBox, QLabel, QPushButton
 from PySide2.QtCore import QFile
 from PySide2.QtUiTools import QUiLoader
@@ -62,16 +62,6 @@ class micGui(QWidget):
         self.changesAvailable = True
         self.handleUpdated = handleNumber
         self.changed = 0
-
-    def showSettingsButton(self):
-        image = "./mic/gui/filter-gui/settings-button.png"
-        imageHover = "./mic/gui/filter-gui/settings-button-hover.png"
-        button = QPushButton("", self) 
-        button.setGeometry(685, 10, 24, 27)
-        button.setStyleSheet("border-radius : 50") 
-        button.setStyleSheet("QPushButton {border-image: url("+image+"); } QPushButton:hover { border-image: url("+imageHover+")}")
-        self.settingsButton = button
-
 
     def setHandlers(self, newVal, handlerID):
         self.guiSettings.updatesAvailable = True
@@ -218,7 +208,56 @@ class micGui(QWidget):
         self.queue.put(None)
         sys.exit()
 
+    def closeEvent(self, event):
+        self.closeSettings()
+
+    def closeSettings(self):
+        if hasattr(self, 'sets'):
+            self.sets.close()
+
+    def showSettingsButton(self):
+        image = "./mic/gui/filter-gui/settings-button.png"
+        imageHover = "./mic/gui/filter-gui/settings-button-hover.png"
+        button = QPushButton("", self) 
+        button.setGeometry(685, 10, 24, 27)
+        button.setStyleSheet("border-radius : 50") 
+        button.setStyleSheet("QPushButton {border-image: url("+image+"); } QPushButton:hover { border-image: url("+imageHover+")}")
+        button.clicked.connect(self.openSettings)
+        self.settingsButton = button
+
+    def openSettings(self):
+        self.sets = settingsWindow()
+        self.sets.show()
+
+class settingsWindow(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        self.setWindowTitle('Settings')
+        self.setFixedSize(320, 500)
+        layout = QGridLayout()
+        self.label = QLabel()
+        self.label.setOpenExternalLinks(True)
+        text = ("<strong>Software developed using:</strong><br>"
+                "Qt for Python under LGPL v3 and GPL v3 licenses.<br>"
+                "Qt sources will be provided on demand, contact me if needed.<br>"
+                "<a href=\"https://wiki.qt.io/Building_Qt_5_from_Git#Getting_the_source_code\">Official download</a>.<br>"
+                "<br>"
+                "NumPy under the BSD 3-Clause License. <br>"
+                "<br>"
+                "PyAudio under the MIT License. <br>"
+                "<br>"
+                "Check binaries to see licenses.")
+        
+        self.label.setText(text)
+        self.label.setTextFormat(Qt.RichText)
+        self.label.openExternalLinks()
+        layout.addWidget(self.label)
+        self.button = QPushButton('Close')
+        self.button.clicked.connect(self.close)
+        layout.addWidget(self.button)
+        self.setLayout(layout)
+
 def runUserGUI(exitProgram, queue):
-    widget = micGui(queue)
-    widget.show()
-    widget.sys_exit(exitProgram)
+    mainWindow = micGui(queue)
+    mainWindow.show()
+    mainWindow.sys_exit(exitProgram)
