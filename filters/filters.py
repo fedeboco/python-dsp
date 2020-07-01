@@ -2,6 +2,10 @@ from filters import windows as win
 from filters import filmath as fmath
 import numpy as np
 
+# stores IDEAL filter properties, stores
+# window and computes it's optimal parameters
+# for generating the REAL filter in other
+# modules
 
 class Filter:
     values = {}
@@ -14,6 +18,7 @@ class Filter:
     cutFreqs = []
     bandFilters = []
   
+    # loads filter specifications from user interface
     def loadValues(self, wVector, deltaVector, ampVector):
         auxList = []
         auxValues = {}
@@ -37,37 +42,54 @@ class Filter:
         for i in range(0,len(auxList)):
            self.values[auxList[i]] = auxValues[auxList[i]]
 
+    # loads specs, computes optimal parameters and window
     def __init__(self, wVector, deltaVector, ampVector):
         self.loadValues(wVector, deltaVector, ampVector)
         self.findLimitingValues()
         self.computeWindow()
         self.printValues()
 
+    # this filter uses 1 window. So it needs to find
+    # it's restricting parameters of transition width W
+    # and overshoot delta.
     def findLimitingValues(self):
         self.W = findLimitingW(self.values.keys())
         self.delta = findLimitingDelta(self.values.values(), self.A)
 
+    # creates window of length M based on type, transition width W 
+    # and overshoot delta
     def computeWindow(self):
         self.window = createWindow(self.filterType, self.W, self.delta)
 
+    # prints (w, delta) dictionary
     def printValues(self):
         print(self.values)
 
+    # returns window
     def getWindow(self):
         return self.window.values
 
+    # returns ideal low pass filter
+    # wc: cutoff angular frequency
     def filterLP(self, wc):
         return idealLP(wc, self.window.M)
     
+    # returns ideal all pass filter
     def filterAP(self):
         return idealAP(self.window.M)
 
+    # returns ideal high pass filter
+    # wc: cutoff angular frequency
     def filterHP(self, wc):
         return idealHP(wc, self.window.M)
-
+    
+    # wl: low cutoff angular frequency
+    # wh: high cutoff angular frequency
     def filterBP(self, wl, wh):
         return idealBP(wl, wh, self.window.M)
 
+    # builds an ideal multiband filter based on stored specs
+    # and computed parameters
     def build(self):
         self.cutFreqs = cutoffFrequencies(list(self.values.keys()))
         amplitude = self.A
@@ -91,9 +113,11 @@ class Filter:
         self.fil = h
         return h
 
+    # returns filter bands of the multiband filter as a matrix
     def getFilterBands(self):
         return self.bandFilters
 
+    # modifies amplitude of ideal filter band with index bandIndex
     def modifyBandAmplitude(self, amplitude, bandIndex):
         i = bandIndex
         band = self.bandFilters[i]
@@ -115,6 +139,8 @@ class Filter:
         self.fil = self.fil + h
         return self.fil
 
+# this function computes an ideal low pass filter with cutoff freq
+# wc, length M and amplitude A
 def idealLP(wc, M, A = 1):
     tau = M / 2.0
     pi = np.pi
@@ -123,6 +149,8 @@ def idealLP(wc, M, A = 1):
     h = np.multiply(h, A * wc / pi)
     return h
 
+# this function computes an ideal all pass filter with length 
+# M and amplitude A
 def idealAP(M, A = 1):
     tau = M / 2.0
     x = np.linspace(-tau, M - tau, M)
@@ -130,16 +158,22 @@ def idealAP(M, A = 1):
     h = np.multiply(h, A)
     return h
 
+# this function computes an ideal high pass filter with cutoff freq
+# wc, length M and amplitude A
 def idealHP(wc, M, A = 1):
     ap = idealAP(M, A)
     lp = idealLP(wc, M, A)
     return ap - lp
 
+# this function computes an ideal band pass filter with cutoff freqs
+# wl (low) and wh (high), length M and amplitude A
 def idealBP(wl, wh, M, A = 1):
     lp1 = idealLP(wh, M, A)
     lp2 = idealLP(wl, M, A)
     return lp1 - lp2
 
+# this function computes an ideal multiband filter with cutoff frequencies
+# wVector, length M and amplitude A
 def idealMB(wVector, amplitude, M, iBP):
     wVector = cutoffFrequencies(wVector)
     h = idealLP(wVector[0], M, amplitude[0])
@@ -151,6 +185,7 @@ def idealMB(wVector, amplitude, M, iBP):
         h =  h + iBP[-1]
     return h
 
+# computes cutoff frequencies from transition start and transition end scalar frequencies
 def cutoffFrequencies(wVector):
     return [ (wVector[i] + wVector[i + 1]) / 2.0 for i in range(0, len(wVector) - 1, 2)]
 
@@ -181,6 +216,7 @@ def findLimitingDelta(deltaVector, A):
 
     return minDelta
 
+# determine filter type
 def filterType(fType = 0, aStart = -1, aEnd = -1):
     if (fType > 0 and fType < 5):
         return fType
@@ -193,6 +229,10 @@ def filterType(fType = 0, aStart = -1, aEnd = -1):
     else:
         return 1
 
+# determines window to use
+# if one delta is provided, assumes minimal delta is
+# already determined. Otherwise, in can receive 2 and
+# determine it
 def chooseWindow(fType, W, delta1, delta2 = 0):
     windows = {
         "dRect": 0.09,
@@ -214,6 +254,8 @@ def chooseWindow(fType, W, delta1, delta2 = 0):
     print("Couldn't choose a proper window in chooseWindow()")
     return []
 
+# computes window waveform based on type, name, and length.
+# size param provides a way to generate larger vectors for later products
 def createWindow(fType, W, delta1, delta2 = 0, size = 0):
     window = chooseWindow(fType, W, delta1, delta2)
     if (window == []):
@@ -234,15 +276,19 @@ def createWindow(fType, W, delta1, delta2 = 0, size = 0):
 
     return window
 
+# decides which delta is smaller between 2 values
 def minDelta(delta1, delta2):
     if (delta2 == 0 or delta1 < delta2):
         return delta1
     else:
         return delta2
 
+# determines if available window satisfies user 
+# specifications
 def isGoodWindow(deltaWindow, deltaDesired):
     return deltaWindow < deltaDesired
 
+# determins window length based on type and name of win
 def setM(filterType, window, w):
     pi = 3.14159265358979323846
     odd = True
@@ -261,6 +307,7 @@ def setM(filterType, window, w):
     M = setParity(M, odd)
     return M
 
+# decides if window should have odd length or not
 def setParity(M, odd):
     if (M % 2 == 0 and odd):
         return M + 1
@@ -269,11 +316,12 @@ def setParity(M, odd):
     else:
         return M
 
+# applies any filter 'fil' to signal 's'
 def filterSignal(s, fil):
     s = np.array(s)
     y = np.dot(s, fil)
     return y
 
-#returns discrete frequency vector normalized (Hz to rads/pi)
+# returns discrete frequency vector normalized (Hz to rads/pi)
 def toDiscreteFrequency(frequencies, fsampling):
     return [2 * f / fsampling for f in frequencies]
