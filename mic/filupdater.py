@@ -4,6 +4,7 @@ from filters import filters
 from filters.filters import toDiscreteFrequency
 import numpy as np
 
+# this class is an updates container
 class FilterUpdate():
     rate = 0
     fil = []
@@ -18,6 +19,7 @@ class FilterUpdate():
         if 'mode' in kwargs:
             self.mode = kwargs['mode']
 
+# this class updates filter from gui signals
 class filterUpdater():
     queue = Queue()
     guiSettings = guiSettings()
@@ -48,9 +50,12 @@ class filterUpdater():
                                             self.ampVec )
             self.fil = self.filter.build()
 
+    # returns updates queue
     def getQueue(self):
         return self.queue
 
+    # sends update signal to filtering process, with new filter
+    # and parameters (e.g: sampling rate)
     def update(self, updatesQueue, updatesAvailable):
         while ( True ):
             self.guiSettings = self.queue.get()
@@ -60,10 +65,12 @@ class filterUpdater():
             self.sendUpdate(updatesQueue, updatesAvailable)
             self.lastGuiSettings = self.guiSettings
 
+    # updates band amplitude of single band
     def updateAmplitudes(self, A, band):
         A = A / 99.0 * 2.0
         self.fil = self.filter.modifyBandAmplitude(A, band)
 
+    # computes and sends update of updated filter
     def sendUpdate(self, updatesQueue, updatesAvailable):
         if (self.guiSettings.settingsChanged(self.lastGuiSettings)):
             self.guiResolutionToFilter()
@@ -79,6 +86,7 @@ class filterUpdater():
         updatesQueue.put(self.updates)
         updatesAvailable.value = True
 
+    # rebuilds filter based on parameters
     def buildFilter(self):
         if (self.guiSettings.filterSelected == 0):
             self.filter = filters.Filter(   self.wVec, 
@@ -93,10 +101,17 @@ class filterUpdater():
     def translateGuiToFilter(self):
         self.rate = self.guiSettings.rate
 
+    # transforms gui rates (0, 1, 2, ...) 
+    # to standard rates (48k, 44.1k, ...)
     def guiRateToFilterRate(self):
         rates = [48000, 44100, 32000, 22050, 11025, 8000]
         return rates[self.guiSettings.rateSelected]
 
+    # transforms gui resolution (0, 1, 2, ...) 
+    # to deltas-widths combinations
+    # lower gui resolution produces narrower transitions
+    # and smaller delta overshoots, requiring more
+    # processing time
     def guiResolutionToFilter(self):
         transitionWidth = [10, 15, 25, 30, 44]
         deltas = [0.08, 0.1, 0.12, 0.2, 0.5]
