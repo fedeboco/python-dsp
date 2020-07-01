@@ -1,5 +1,8 @@
 from numpy import array, zeros
 
+# this class modifies handles values using callbacks,
+# notifing to calling observers when modified
+
 class Handlers:
     values = zeros(10)
     _callbacks = [] 

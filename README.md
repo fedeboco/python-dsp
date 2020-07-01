@@ -19,6 +19,12 @@ This subproject provides a multiband filter with the sole purpose of testing Pyt
 * Numpy
 * Optional: matplotlib (for testing filters)
 
+### Pending
+* Error control
+* Butterworth filtering
+* Goblin filtering
+* Detailed settings
+
 ### PyAudio and PyQt install
 ```
 pip install PyAudio‑0.2.11‑cp38‑cp38‑win_amd64.whl
