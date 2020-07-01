@@ -1,23 +1,29 @@
-from filters import windows
-from filters import graphs
-from filters import filters
-from mic import mic as mic
+# [important changes pending]
+# this file serves for testing purposes
+# functions will be moved to another module / class
+
+from filters import windows, graphs, filters, settings
+
 import numpy as np
 import multiprocessing as mp
 import time
-from filters import settings
-from mic import gui
-from mic import filupdater as updater
 
+from mic import mic as mic
+from mic import filupdater as updater
+from mic import gui
+
+# plots graph of filter response
 def plotMyFilter(filter, rate, exitProgram):
     f = np.fft.fft(filter)
     graphs.plotFilterResponse(abs(f), rate, "Multiband Filter")
     graphs.closeAll(exitProgram)
 
+# starts pyaudio and mic
 def filterMyMic(speech, updatesQueue, updatesFlag):
     speech.devicesInfo()
     speech.startStream(updatesQueue, updatesFlag)    
 
+# creates filter
 def testSettings():
     d = 0.08
     rate = 22050
@@ -30,11 +36,13 @@ def testSettings():
 def GUI(exitProgram, queue):
     gui.runUserGUI(exitProgram, queue)
 
+# checks for updates sent from gui
 def updateFilter(exitProgram, queue, filSets, updatesQueue, updatesFlag):
     filUpdater = updater.filterUpdater(queue, filterSettings = filSets)
     filUpdater.update(updatesQueue, updatesFlag)
 
-if __name__ == '__main__':
+# launchs processes
+def runMicFilterWithGUI():
     exitProgram = mp.Value('b', False)
     queue = mp.Queue(maxsize=int(1))
     updatesQueue = mp.Queue(maxsize=int(1))
@@ -63,3 +71,6 @@ if __name__ == '__main__':
 
     for process in processes:
         process.join()
+
+if __name__ == '__main__':
+    runMicFilterWithGUI()

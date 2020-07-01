@@ -1,3 +1,5 @@
+# this file serves speed testing purposes
+
 from filters import filmath as fi
 from filters import graphs
 import numpy as np

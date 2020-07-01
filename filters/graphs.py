@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import time
 
+# plots signal
 def plot(vector, yAxisLabel = "y"):
     fig = plt.figure()
     plt.plot(vector)
@@ -14,6 +15,7 @@ def plot(vector, yAxisLabel = "y"):
     ax.autoscale_view(True,True,True) # for multiprocessing
     fig.canvas.draw()
 
+# plots frequency response of filter
 def plotFilterResponse(vector, rate, yAxisLabel = "fft(x[n])"):
     L = int(len(vector) / 2)
     x = [n * rate / L / 1000 for n in range(L)]
@@ -29,11 +31,13 @@ def plotFilterResponse(vector, rate, yAxisLabel = "fft(x[n])"):
     ax.autoscale_view(True,True,True) # for multiprocessing
     fig.canvas.draw()
 
+# waits to signal for closing all graphs
 def closeAll(quitRequested):
     while (not quitRequested.value):
         time.sleep(1)
     plt.close('all')
 
+# opens multiple plots
 def multiPlot(vectors, rows = 1, cols = 1, legends= []):
     plotted = 0
     legendsPlotted = 0

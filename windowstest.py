@@ -1,3 +1,5 @@
+# this file serves for windows waveform testing
+
 from filters import windows
 from filters import graphs
 from filters import filters

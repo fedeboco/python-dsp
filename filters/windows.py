@@ -1,5 +1,10 @@
 import numpy as np
 
+# this module computes different windows
+# using numpy for fast computation and performance
+# testing purposes
+
+#this class stores window information
 class Window:
     name = "rectangular"
     values = []

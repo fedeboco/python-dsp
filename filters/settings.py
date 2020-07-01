@@ -1,6 +1,7 @@
 from filters.filters import toDiscreteFrequency
 from multiprocessing import Lock
 
+# this class stores user-interface settings
 class filterSettings:
     frequencies = []
     deltas = []
@@ -23,6 +24,8 @@ class filterSettings:
     def __init__(self, f, d, a, rate):
         self.update(f, d, a, rate)
 
+# this class stores specific gui settings 
+# for multi band filters with handles
 class guiSettings:
     filterSelected = 0
     resolutionSelected = 0
@@ -46,6 +49,7 @@ class guiSettings:
         print("handle: [", self.handleSelected, end=", ")      
         print(self.handleValue, "]")
 
+    # checks if something changed
     def settingsChanged(self, oldSettings):
         a = self.filterSelected != oldSettings.filterSelected
         b = self.resolutionSelected != oldSettings.resolutionSelected

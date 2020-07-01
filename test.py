@@ -1,3 +1,7 @@
+# [deprecated]
+# this file serves filter waveform and pyaudio testing purposes
+# without processes
+
 from filters import windows
 from filters import graphs
 from filters import filters
